@@ -12,6 +12,7 @@ from src.configs.yaml_loader import cfg
 
 from src.services.common.downloader import DownloaderService
 from src.services.common.new import NewReleasesService
+from src.services.common.track_cache import TrackFileCache
 
 from src.bot.keyboards.common.tracks import PER_PAGE, tracks_keyboard
 from src.utils.track_sender import send_track_to_chat
@@ -82,6 +83,7 @@ async def new_track(
     callback: CallbackQuery,
     new_service: NewReleasesService = Provide[Container.new_service],
     downloader: DownloaderService = Provide[Container.downloader_service],
+    file_cache: TrackFileCache = Provide[Container.file_cache]
 ):
     source_id = int(callback.data.split(":")[1])
     track = new_service.get_by_id(source_id)
@@ -91,4 +93,4 @@ async def new_track(
             await callback.answer("🔄 Список новинок обновился — открой «Новинки» заново", show_alert=True)
         return
 
-    await send_track_to_chat(callback, track, downloader)
+    await send_track_to_chat(callback, track, downloader, file_cache)

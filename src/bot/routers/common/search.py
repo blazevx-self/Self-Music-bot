@@ -15,6 +15,7 @@ from src.types.user_entity import UserData
 
 from src.services.common.search import SearchService
 from src.services.common.downloader import DownloaderService
+from src.services.common.track_cache import TrackFileCache
 
 from src.bot.keyboards.common.search import PER_PAGE, search_keyboard
 from src.utils.track_sender import send_track_to_chat
@@ -52,6 +53,7 @@ async def send_track(
     user: UserData,
     search_service: SearchService = Provide[Container.search_service],
     downloader: DownloaderService = Provide[Container.downloader_service],
+    file_cache: TrackFileCache = Provide[Container.file_cache]
 ):
     source_id = int(callback.data.split(":")[1])
     track = search_service.get_remembered(user.telegram_id, source_id)
@@ -68,7 +70,7 @@ async def send_track(
 
         return
 
-    await send_track_to_chat(callback, track, downloader)
+    await send_track_to_chat(callback, track, downloader, file_cache)
 
 @router.callback_query(F.data == "spage:noop")
 async def page_noop(callback: CallbackQuery):

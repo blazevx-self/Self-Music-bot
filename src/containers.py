@@ -14,6 +14,7 @@ from src.services import (
     SearchService,
     DeezerClient,
     DownloaderService,
+    TrackFileCache,
 )
 from src.services.common.new import NewReleasesService
 
@@ -35,3 +36,4 @@ class Container(containers.DeclarativeContainer):
     downloader_service = providers.Singleton(DownloaderService)
     search_service = providers.Singleton(SearchService, deezer=deezer_client)
     new_service = providers.Singleton(NewReleasesService, deezer=deezer_client)
+    file_cache = providers.Singleton(TrackFileCache)
