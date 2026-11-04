@@ -31,7 +31,7 @@ class CallbackSpamMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         if not isinstance(event, CallbackQuery):
-            await handler(event, data)
+            return await handler(event, data)
 
         user_id = event.from_user.id
 
@@ -70,7 +70,7 @@ class MessageFloodMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         if not isinstance(event, Message) or not event.from_user:
-            await handler(event, data)
+            return await handler(event, data)
 
         user_id = event.from_user.id
         now = time.monotonic()

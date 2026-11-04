@@ -71,9 +71,10 @@ services:
 
     environment:
       - PYTHONUNBUFFERED=1
+      - POSTGRES_HOSTNAME=postgres
 
     volumes:
-      - ./logs:/src/logs
+      - ./logs:/app/logs
 
     logging:
       driver: json-file
