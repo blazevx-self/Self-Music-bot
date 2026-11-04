@@ -12,7 +12,10 @@ from src.database.repositories import (
 from src.services import (
     StartService,
     SearchService,
+    DeezerClient,
+    DownloaderService,
 )
+from src.services.common.new import NewReleasesService
 
 session_context: ContextVar[AsyncSession] = ContextVar("session_context")
 
@@ -27,4 +30,8 @@ class Container(containers.DeclarativeContainer):
 
     # services
     start_service = providers.Factory(StartService, user_repo=user_repo)
-    search_service = providers.Singleton(SearchService)
+
+    deezer_client = providers.Singleton(DeezerClient)
+    downloader_service = providers.Singleton(DownloaderService)
+    search_service = providers.Singleton(SearchService, deezer=deezer_client)
+    new_service = providers.Singleton(NewReleasesService, deezer=deezer_client)

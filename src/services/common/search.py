@@ -1,10 +1,12 @@
 import asyncio
-import aiohttp
 import yt_dlp
 
 from pathlib import Path
 from typing import Any
 
+from cachetools import TTLCache
+
+from src.services.external.deezer import DeezerClient
 from src.types.track import TrackData
 from src.utils.logger import system_logger
 
@@ -29,69 +31,34 @@ def _to_track(item: dict) -> TrackData | None:
     )
 
 class SearchService:
-    def __init__(self):
-        self._last: dict[int, tuple[str, list[TrackData]]] = {}
+    def __init__(self, deezer: DeezerClient) -> None:
+        self.deezer = deezer
+        self._last: TTLCache = TTLCache(maxsize=1000, ttl=3600)
 
     def remember(self, user_id: int, query: str, tracks: list[TrackData]) -> None:
-        self._last[user_id] = (query, tracks)
+        self._last[user_id] = {
+            "query": query,
+            "tracks": tracks,
+            "by_id": {t.source_id: t for t in tracks}
+        }
 
     def page(self, user_id: int, page: int, per_page: int = 10):
-        query, tracks = self._last.get(user_id, ("", []))
+        entry = self._last.get(user_id) or {"query": "", "tracks": []}
+        tracks = entry["tracks"]
         start = page * per_page
-        chunk = tracks[start : start + per_page]
-        return query, chunk, len(tracks)
+        chunk = tracks[start: start + per_page]
+        return entry["query"], chunk, len(tracks)
 
     def get_remembered(self, user_id: int, source_id: int) -> TrackData | None:
-        _, tracks = self._last.get(user_id, ("", []))
-        for track in tracks:
-            if track.source_id == source_id:
-                return track
+        entry = self._last.get(user_id)
 
-        return None
+        if entry is None:
+            return None
 
-    @staticmethod
-    async def search(query: str) -> list[TrackData]:
-        query = query.strip()
+        return entry["by_id"].get(source_id)
 
-        if not query:
-            return []
-
-        timeout = aiohttp.ClientTimeout(total=10)
-
-        try:
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(
-                    DEEZER_SEARCH_URL,
-                    params={"q": query}
-                ) as response:
-                    if response.status != 200:
-                        system_logger.warning(
-                            f"[SEARCH] Deezer HTTP {response.status} | q={query}"
-                        )
-                        return []
-
-                    payload = await response.json()
-        except aiohttp.ClientError as e:
-            system_logger.warning(f"[SEARCH] Deezer request failed | q={query} | error={e}")
-            return []
-
-        items = payload.get("data") or []
-
-        if not isinstance(items, list):
-            return []
-
-        tracks: list[TrackData] = []
-
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-
-            track = _to_track(item)
-
-            if track is not None:
-                tracks.append(track)
-
-        return tracks
+    async def search(self, query: str) -> list[TrackData]:
+        return await self.deezer.search_tracks(query)
 
     @staticmethod
     async def download_track(artist: str, title: str, dest_dir: Path) -> Path | None:
@@ -126,5 +93,5 @@ class SearchService:
         try:
             return await asyncio.to_thread(_download)
         except Exception as e:
-            system_logger.error(f"[DOWNLOAD] Ошибка yt-dlp для «{query}»: {e}")
+            system_logger.error(f"[DOWNLOAD] Error yt-dlp for «{query}»: {e}")
             return None
