@@ -9,6 +9,7 @@ from src.utils.logger import system_logger
 
 # Лимит Telegram Bot API на отправку файлов (около 50 МБ)
 MAX_FILE_SIZE = 49 * 1024 * 1024
+MAX_DURATION_DIFF = 15
 
 class DownloaderService:
     """
@@ -18,7 +19,13 @@ class DownloaderService:
     def __init__(self, max_concurrent: int = 4) -> None:
         self._semaphore = asyncio.Semaphore(max_concurrent)
 
-    async def download(self, artist: str, title: str, dest_dir: Path) -> Path | None:
+    async def download(
+        self,
+        artist: str,
+        title: str,
+        dest_dir: Path,
+        expected_duration_sec: int | None = None
+    ) -> Path | None:
         query = f"{artist} - {title}"
         out_tmpl = str(dest_dir / "%(id)s.%(ext)s")
 
@@ -64,6 +71,14 @@ class DownloaderService:
                             continue
 
                         if info:
+                            dur = info.get("duration") or 0
+
+                            if expected_duration_sec and dur and abs(dur - expected_duration_sec) > MAX_DURATION_DIFF:
+                                system_logger.warning(
+                                    f"[DOWNLOAD] skip {url} | duration={dur}s != expected={expected_duration_sec}s"
+                                )
+                                continue
+
                             path = Path(ydl.prepare_filename(info))
                             return path.with_suffix(".m4a") if has_ffmpeg else path
             return None

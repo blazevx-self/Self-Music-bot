@@ -47,7 +47,10 @@ async def send_track_to_chat(
     thumb = URLInputFile(track.cover_url, filename="cover.jpg") if track.cover_url else None
 
     with tempfile.TemporaryDirectory(prefix="music_") as tmpdir:
-        file_path = await downloader.download(track.artist, track.title, Path(tmpdir))
+        file_path = await downloader.download(
+            track.artist, track.title, Path(tmpdir),
+            expected_duration_sec=track.duration_sec
+        )
 
         if not file_path or not downloader.is_size_ok(file_path):
             await callback.message.answer(
