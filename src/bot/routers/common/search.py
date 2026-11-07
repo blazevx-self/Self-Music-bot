@@ -18,7 +18,7 @@ from src.services.common.downloader import DownloaderService
 from src.services.common.track_cache import TrackFileCache
 
 from src.bot.keyboards.common.search import PER_PAGE, search_keyboard
-from src.utils.track_sender import send_track_to_chat
+from src.bot.utils import parse_callback_id, send_track_to_chat
 
 router = Router()
 
@@ -55,7 +55,12 @@ async def send_track(
     downloader: DownloaderService = Provide[Container.downloader_service],
     file_cache: TrackFileCache = Provide[Container.file_cache]
 ):
-    source_id = int(callback.data.split(":")[1])
+    source_id = parse_callback_id(callback.data)
+
+    if source_id is None:
+        await callback.answer()
+        return
+
     track = search_service.get_remembered(user.telegram_id, source_id)
 
     if track is None:
@@ -85,7 +90,12 @@ async def search_page(
 ):
     await callback.answer()
 
-    page = int(callback.data.split(":")[1])
+    page = parse_callback_id(callback.data)
+
+    if page is None:
+        await callback.answer()
+        return
+
     query, chunk, total = search_service.page(user.telegram_id, page, PER_PAGE)
 
     if not chunk:

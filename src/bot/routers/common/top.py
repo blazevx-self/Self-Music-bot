@@ -19,7 +19,7 @@ from src.services.common.track_cache import TrackFileCache
 from src.bot.keyboards.common.tracks import tracks_keyboard
 from src.bot.keyboards.common.top import genres_keyboard
 
-from src.utils.track_sender import send_track_to_chat
+from src.bot.utils import send_track_to_chat
 
 router = Router()
 
@@ -101,7 +101,7 @@ async def top_page(callback: CallbackQuery, top_service: TopService = Provide[Co
     try:
         genre_id, page = int(parts[1]), int(parts[2])
     except (IndexError, ValueError):
-        await callback.answer()
+        await callback.answer() # noop-кнопка счётчика или мусор
         return
 
     if not callback.message:
@@ -142,6 +142,7 @@ async def top_track(
     track = top_service.get_by_id(genre_id, source_id)
 
     if track is None:
+        # Чарт жанра обновился, а у юзера на экране старый список
         with suppress(TelegramBadRequest):
             await callback.answer("Топ обновился — выбери жанр заново 🔝", show_alert=True)
         return

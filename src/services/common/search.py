@@ -3,26 +3,6 @@ from cachetools import TTLCache
 from src.services.external.deezer import DeezerClient
 from src.types.data.track import TrackData
 
-DEEZER_SEARCH_URL = "https://api.deezer.com/search"
-
-def _to_track(item: dict) -> TrackData | None:
-    preview = item.get("preview") or ""
-
-    if not preview:
-        return None
-
-    artist = (item.get("artist") or {}).get("name") or ""
-    cover = (item.get("album") or {}).get("cover_medium")
-
-    return TrackData(
-        source_id=item["id"],
-        title=item.get("title") or "",
-        artist=artist,
-        duration_sec=item.get("duration") or 0,
-        preview_url=preview,
-        cover_url=cover
-    )
-
 class SearchService:
     def __init__(self, deezer: DeezerClient) -> None:
         self.deezer = deezer

@@ -8,14 +8,6 @@ from src.services.external.deezer import DeezerClient
 from src.utils.logger import system_logger
 
 class NewReleasesService:
-    """
-        «Новинки мира»: мировой чарт треков Deezer с кэшем в памяти процесса.
-
-        Кэш обновляется лениво при get_tracks(), не чаще раза в REFRESH_INTERVAL,
-        поэтому каждый день состав разный. При ошибке сети возвращается последний
-        успешный кэш (stale), а _fetched_at НЕ обновляется — ретmouth на следующем открытии.
-        """
-
     REFRESH_INTERVAL = timedelta(hours=12)
     CHART_LIMIT = 70
 
