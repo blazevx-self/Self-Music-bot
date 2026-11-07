@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     CHANNEL_ID: int = Field(default=...)
     CHANNEL_URL: str = Field(default=...)
 
+    # Опционально: прокси для yt-dlp (например socks5h://127.0.0.1:1080),
+    # если YouTube/SoundCloud недоступны напрямую с сервера (блокировка/DNS)
+    YTDLP_PROXY: str | None = Field(default=None)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
