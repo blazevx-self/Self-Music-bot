@@ -14,6 +14,7 @@ from src.services import (
     SearchService,
     NewReleasesService,
     TopService,
+    CollectionService,
     DownloaderService,
     TrackFileCache,
     DeezerClient,
@@ -39,4 +40,5 @@ class Container(containers.DeclarativeContainer):
     search_service = providers.Singleton(SearchService, deezer=deezer_client)
     new_service = providers.Singleton(NewReleasesService, deezer=deezer_client)  # «Новинки»
     top_service = providers.Singleton(TopService, deezer=deezer_client)          # «Топ» по жанрам
+    collection_service = providers.Singleton(CollectionService, deezer=deezer_client)  # «Подборки» по настроениям
     file_cache = providers.Singleton(TrackFileCache)                              # file_id скачанных треков
