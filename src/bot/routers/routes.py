@@ -1,4 +1,4 @@
-from src.bot.routers.common import start, help, search, new, top, collections, stub
+from src.bot.routers.common import start, help, search, new, top, collections, settings, stub
 
 all_routers = (
     start.router,
@@ -7,6 +7,7 @@ all_routers = (
     new.router,          # «Новинки»: menu:new, npage:*, new:*
     top.router,          # «Топ»: menu:top, topg:*, tpage:*, top:*
     collections.router,  # «Подборки»: menu:mixes, mixg:*, mpage:*, mix:*
+    settings.router,     # «Настройки»: menu:settings, set:*
     stub.router,         # catch-all для menu:* — строго последним
 )
 

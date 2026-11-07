@@ -3,6 +3,7 @@ from .common.search import SearchService
 from .common.new import NewReleasesService
 from .common.top import TopService
 from .common.collections import CollectionService
+from .common.settings import SettingsService
 from .common.downloader import DownloaderService
 from .common.track_cache import TrackFileCache
 from .external import DeezerClient
@@ -12,6 +13,8 @@ __all__ = [
     'SearchService',
     'NewReleasesService',
     'TopService',
+    'CollectionService',
+    'SettingsService',
     'DownloaderService',
     'TrackFileCache',
     'DeezerClient',

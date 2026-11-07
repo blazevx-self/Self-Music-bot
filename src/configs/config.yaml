@@ -90,3 +90,16 @@ message:
     updating: Обновляю подборку…
     buttons:
       back: Назад
+
+  settings:
+    title: |
+      ⚙️ <b>Настройки</b>
+
+      Включи или выключи функции бота.
+    enabled: "✅ Включено"
+    disabled: "❌ Выключено"
+    unknown: Неизвестная настройка
+    buttons:
+      recognize: "🎙 Распознавание треков"
+      playlists: "📁 Мои плейлисты"
+      back: Назад
