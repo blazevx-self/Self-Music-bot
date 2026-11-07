@@ -4,7 +4,7 @@ from sqlalchemy import select, update, case
 from sqlalchemy.dialects.postgresql import insert
 
 from src.core.exceptions.user import UserNotFoundError
-from src.types.user_entity import UserData
+from src.types.data.user import UserData
 
 from src.database.models.user import UserOrm
 from src.database.repositories.base import Base

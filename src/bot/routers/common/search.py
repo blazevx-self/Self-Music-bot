@@ -11,7 +11,7 @@ from dependency_injector.wiring import Provide, inject
 from src.containers import Container
 from src.configs.yaml_loader import cfg
 
-from src.types.user_entity import UserData
+from src.types.data.user import UserData
 
 from src.services.common.search import SearchService
 from src.services.common.downloader import DownloaderService

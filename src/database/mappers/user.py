@@ -1,5 +1,5 @@
 from src.database.models.user import UserOrm
-from src.types.user_entity import UserData
+from src.types.data.user import UserData
 
 def orm_to_user(user: UserOrm) -> UserData:
     return UserData(

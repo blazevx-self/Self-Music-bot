@@ -1,6 +1,8 @@
 import aiohttp
 
-from src.types.track import TrackData
+from src.types.data.track import TrackData
+from src.types.data.genre import GenreData
+
 from src.utils.logger import system_logger
 
 DEEZER_BASE_URL = "https://api.deezer.com"
@@ -21,6 +23,7 @@ def _to_track(item: dict) -> TrackData | None:
         duration_sec=item.get("duration") or 0,
         preview_url=preview,
         cover_url=cover,
+        rank=item.get("rank") or 0
     )
 
 class DeezerClient:
@@ -77,3 +80,35 @@ class DeezerClient:
     async def world_chart_tracks(self, limit: int = 70) -> list[TrackData]:
         payload = await self._get_json("/chart/0/tracks", {"limit": limit})
         return self._parse_tracks(payload)
+    
+    async def genre_chart_tracks(self, genre_id: int, limit: int = 70) -> list[TrackData]:
+        payload = await self._get_json(f"/chart/{genre_id}/tracks", {"limit": limit})
+        return self._parse_tracks(payload)
+
+    async def genres(self, limit: int = 50) -> list[GenreData]:
+        payload = await self._get_json("/genre", {"limit": limit})
+        
+        if not payload:
+            return []
+        
+        raw_items = payload.get("data" or [])
+        
+        if not isinstance(raw_items, list):
+            return []
+       
+        result: list[GenreData] = []
+        
+        for item in raw_items:
+            if not isinstance(item, dict):
+                continue
+           
+            if item.get("id") is None or not item.get("name"):
+                continue
+           
+            result.append(GenreData(
+                id=item["id"],
+                name=item["name"],
+                picture_url=item.get("picture_medium"),
+            ))
+           
+        return result

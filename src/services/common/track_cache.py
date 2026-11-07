@@ -1,6 +1,6 @@
 from cachetools import TTLCache
 
-from src.types.track import TrackData
+from src.types.data.track import TrackData
 
 class TrackFileCache:
     def __init__(self, maxsize: int = 500, ttl: int = 24 * 3600) -> None:

@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 
 from src.core.constants.pagination import PER_PAGE
-from src.types.track import TrackData
+from src.types.data.track import TrackData
 
 from src.services.external.deezer import DeezerClient
 from src.utils.logger import system_logger

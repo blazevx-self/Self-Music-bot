@@ -1,10 +1,8 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from src.configs.yaml_loader import cfg
 from src.core.constants.pagination import PER_PAGE
-
-from src.types.track import TrackData
+from src.types.data.track import TrackData
 
 def _duration(sec: int) -> str:
     """Форматирует секунды в строку вида 'М:СС'."""
@@ -19,7 +17,8 @@ def tracks_keyboard(
     item_prefix: str,
     page_prefix: str,
     back_callback: str | None = None,
-    per_page: int = PER_PAGE,
+    back_text: str | None = None,
+    per_page: int = PER_PAGE
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
@@ -44,7 +43,7 @@ def tracks_keyboard(
     nav = 1 + int(page > 0) + int(page + 1 < pages)
 
     if back_callback:
-        builder.button(text=cfg["message"]["help"]["buttons"]["back"], callback_data=back_callback)
+        builder.button(text=back_text or "Назад", callback_data=back_callback)
         builder.adjust(*([1] * len(tracks)), nav, 1)
     else:
         builder.adjust(*([1] * len(tracks)), nav)

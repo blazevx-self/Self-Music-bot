@@ -8,3 +8,4 @@ class TrackData:
     duration_sec: int
     preview_url: str
     cover_url: str | None = None
+    rank: int = 0

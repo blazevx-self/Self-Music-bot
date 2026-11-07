@@ -1,10 +1,11 @@
-from src.bot.routers.common import start, help, search, stub, new
+from src.bot.routers.common import start, help, search, stub, new, top
 
 all_routers = (
     start.router,
     help.router,
     search.router,
     new.router,
+    top.router,
     stub.router,
 )
 

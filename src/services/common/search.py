@@ -1,14 +1,7 @@
-import asyncio
-import yt_dlp
-
-from pathlib import Path
-from typing import Any
-
 from cachetools import TTLCache
 
 from src.services.external.deezer import DeezerClient
-from src.types.track import TrackData
-from src.utils.logger import system_logger
+from src.types.data.track import TrackData
 
 DEEZER_SEARCH_URL = "https://api.deezer.com/search"
 
@@ -59,39 +52,3 @@ class SearchService:
 
     async def search(self, query: str) -> list[TrackData]:
         return await self.deezer.search_tracks(query)
-
-    @staticmethod
-    async def download_track(artist: str, title: str, dest_dir: Path) -> Path | None:
-        query = f"{artist} - {title}"
-        out_tmpl = str(dest_dir / "%(id)s.%(ext)s")
-
-        # noinspection SpellCheckingInspection
-        ydl_opts: Any = {
-            "format": "bestaudio[ext=m4a]/bestaudio[ext=mp3]/bestaudio",
-            "outtmpl": out_tmpl,
-            "noplaylist": True,
-            "quiet": True,
-            "no_warnings": True,
-            "concurrent_fragment_downloads": 8,
-            "buffersize": 1024 * 32,
-            "extractor_args": {"youtube": {"player_client": ["mweb"]}},
-        }
-
-        def _download() -> Path | None:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                for source in (f"scsearch1:{query}", f"ytsearch1:{query} audio"):
-                    try:
-                        info: Any = ydl.extract_info(source, download=True)
-
-                        if info and info.get("entries"):
-                            return Path(ydl.prepare_filename(info["entries"][0]))
-                    except Exception:
-                        continue
-
-            return None
-
-        try:
-            return await asyncio.to_thread(_download)
-        except Exception as e:
-            system_logger.error(f"[DOWNLOAD] Error yt-dlp for «{query}»: {e}")
-            return None

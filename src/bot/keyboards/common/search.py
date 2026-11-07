@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup
 
 from src.core.constants.pagination import PER_PAGE
-from src.types.track import TrackData
+from src.types.data.track import TrackData
 
 from src.bot.keyboards.common.tracks import tracks_keyboard
 

@@ -8,7 +8,7 @@ from src.containers import Container
 from src.configs.yaml_loader import cfg
 
 from src.core.enums.status import ResultStatus
-from src.types.user_entity import UserData
+from src.types.data.user import UserData
 
 from src.services.common.start import StartService
 from src.bot.keyboards.common.start import subscribe_keyboard, menu_keyboard
