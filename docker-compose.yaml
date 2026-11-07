@@ -72,8 +72,14 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
 
+    # Если в контейнере не резолвятся домены (yt-dlp: [Errno -5] No address associated
+    # with hostname) при том что с хоста резолвятся — раскомментируй и подставь свои DNS:
+    # dns:
+    #   - 8.8.8.8
+    #   - 1.1.1.1
+
     volumes:
-      - ./logs:/src/logs
+      - ./logs:/app/logs
 
     logging:
       driver: json-file

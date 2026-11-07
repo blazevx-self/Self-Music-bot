@@ -1,11 +1,8 @@
-import tempfile
-
 from html import escape
-from pathlib import Path
 from contextlib import suppress
 
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, FSInputFile, Message, URLInputFile
+from aiogram.types import CallbackQuery, Message
 from aiogram.exceptions import TelegramBadRequest
 
 from dependency_injector.wiring import Provide, inject
@@ -16,6 +13,8 @@ from src.configs.yaml_loader import cfg
 from src.types.user_entity import UserData
 
 from src.services.common.search import SearchService
+from src.services.common.downloader import DownloaderService
+from src.bot.utils import send_track_to_chat, parse_callback_id  # parse_callback_id — вместо int(...split) с риском ValueError
 from src.bot.keyboards.common.search import PER_PAGE, search_keyboard
 
 router = Router()
@@ -50,48 +49,27 @@ async def send_track(
     callback: CallbackQuery,
     user: UserData,
     search_service: SearchService = Provide[Container.search_service],
+    downloader: DownloaderService = Provide[Container.downloader_service],
 ):
-    source_id = int(callback.data.split(":")[1])
+    source_id = parse_callback_id(callback.data)  # None при "srch:abc" вместо ValueError
+    if source_id is None:
+        await callback.answer()
+        return
+
     track = search_service.get_remembered(user.telegram_id, source_id)
 
     if track is None:
         with suppress(TelegramBadRequest):
             await callback.answer("😔 Трек не найден, поищи ещё раз.", show_alert=True)
-            return
 
         if callback.message:
             await callback.message.reply(
                 "Этот поиск устарел. Напиши название песни заново "
                 "<tg-emoji emoji-id=\"5875220935409144484\">🎵</tg-emoji>"
             )
+        return  # return за пределами with — иначе reply ниже мёртвый (баг)
 
-    with suppress(TelegramBadRequest):
-        await callback.answer("⏳ Скачиваю...", show_alert=False)
-
-    thumb = (
-        URLInputFile(track.cover_url, filename="cover.jpg")
-        if track.cover_url
-        else None
-    )
-
-    with tempfile.TemporaryDirectory(prefix="music_") as tmpdir:
-        file_path = await search_service.download_track(track.artist, track.title, Path(tmpdir))
-
-        if not file_path or not file_path.exists():
-            await callback.message.answer(
-                "<tg-emoji emoji-id=\"5827991357603450841\">😢</tg-emoji> "
-                "Не удалось скачать трек."
-            )
-            return
-
-        if callback.message:
-            await callback.message.answer_audio(
-                audio=FSInputFile(file_path, filename=f"{track.artist} - {track.title}{file_path.suffix}"),
-                title=track.title,
-                performer=track.artist,
-                duration=track.duration_sec,
-                thumbnail=thumb
-            )
+    await send_track_to_chat(callback, track, downloader, file_cache)
 
 @router.callback_query(F.data == "spage:noop")
 async def page_noop(callback: CallbackQuery):
@@ -104,9 +82,13 @@ async def search_page(
     user: UserData,
     search_service: SearchService = Provide[Container.search_service],
 ):
+    page = parse_callback_id(callback.data)  # None при "spage:мусор" вместо ValueError
+    if page is None:
+        await callback.answer()
+        return
+
     await callback.answer()
 
-    page = int(callback.data.split(":")[1])
     query, chunk, total = search_service.page(user.telegram_id, page, PER_PAGE)
 
     if not chunk:

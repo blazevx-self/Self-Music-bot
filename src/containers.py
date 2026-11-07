@@ -12,6 +12,11 @@ from src.database.repositories import (
 from src.services import (
     StartService,
     SearchService,
+    NewReleasesService,
+    TopService,
+    DownloaderService,
+    TrackFileCache,
+    DeezerClient,
 )
 
 session_context: ContextVar[AsyncSession] = ContextVar("session_context")
@@ -25,6 +30,13 @@ class Container(containers.DeclarativeContainer):
     # repositories
     user_repo = providers.Factory(UserRepository, session=db_session)
 
+    # external clients
+    deezer_client = providers.Singleton(DeezerClient)
+
     # services
     start_service = providers.Factory(StartService, user_repo=user_repo)
-    search_service = providers.Singleton(SearchService)
+    downloader_service = providers.Singleton(DownloaderService)
+    search_service = providers.Singleton(SearchService, deezer=deezer_client)
+    new_service = providers.Singleton(NewReleasesService, deezer=deezer_client)  # «Новинки»
+    top_service = providers.Singleton(TopService, deezer=deezer_client)          # «Топ» по жанрам
+    file_cache = providers.Singleton(TrackFileCache)                              # file_id скачанных треков
