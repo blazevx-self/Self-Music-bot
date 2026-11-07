@@ -1,4 +1,5 @@
 import asyncio
+import shutil
 import yt_dlp
 
 from pathlib import Path
@@ -21,28 +22,50 @@ class DownloaderService:
         query = f"{artist} - {title}"
         out_tmpl = str(dest_dir / "%(id)s.%(ext)s")
 
+        has_ffmpeg = shutil.which("ffmpeg") is not None
+
         # noinspection SpellCheckingInspection
         ydl_opts: Any = {
-            "format": "bestaudio[ext=m4a]/bestaudio[ext=mp3]/bestaudio",
+            "format": "bestaudio/best" if has_ffmpeg else "bestaudio[ext=m4a]/bestaudio[ext=mp3]/bestaudio",
             "outtmpl": out_tmpl,
             "noplaylist": True,
             "quiet": True,
             "no_warnings": True,
+            "socket_timeout": 15,
+            "retries": 2,
             "concurrent_fragment_downloads": 8,
             "buffersize": 1024 * 32,
-            "extractor_args": {"youtube": {"player_client": ["mweb"]}},
+            "source_address": "0.0.0.0",
+            "extractor_args": {"youtube": {"player_client": ["mweb", "android", "web"]}},
         }
+
+        if has_ffmpeg:
+            ydl_opts["postprocessors"] = [
+                {"key": "FFmpegExtractAudio", "preferredcodec": "m4a", "preferredquality": "192"}
+            ]
 
         def _download() -> Path | None:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                for source in (f"scsearch1:{query}", f"ytsearch1:{query} audio"):
+                for source in (f"scsearch3:{query}", f"ytsearch3:{query} audio"):
                     try:
-                        info: Any = ydl.extract_info(source, download=True)
-
-                        if info and info.get("entries"):
-                            return Path(ydl.prepare_filename(info["entries"][0]))
+                        search: Any = ydl.extract_info(source, download=False)
                     except Exception:
                         continue
+
+                    for entry in (search or {}).get("entries") or []:
+                        url = entry.get("webpage_url") or entry.get("url")
+
+                        if not url:
+                            continue
+
+                        try:
+                            info: Any = ydl.extract_info(url, download=True)
+                        except Exception:
+                            continue
+
+                        if info:
+                            path = Path(ydl.prepare_filename(info))
+                            return path.with_suffix(".m4a") if has_ffmpeg else path
             return None
 
         try:

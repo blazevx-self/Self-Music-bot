@@ -6,7 +6,7 @@ from pathlib import Path
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, FSInputFile, URLInputFile
 
-from src.types.track import TrackData
+from src.types.data.track import TrackData
 
 from src.services.common.downloader import DownloaderService
 from src.services.common.track_cache import TrackFileCache
