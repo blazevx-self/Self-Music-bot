@@ -1,4 +1,7 @@
-from src.bot.routers.common import start, help, search, stub, new, top
+from src.bot.routers.common import (
+    start, help, search,
+    stub, new, top, collections
+)
 
 all_routers = (
     start.router,
@@ -6,6 +9,7 @@ all_routers = (
     search.router,
     new.router,
     top.router,
+    collections.router,
     stub.router,
 )
 

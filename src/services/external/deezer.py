@@ -56,14 +56,16 @@ class DeezerClient:
         if not isinstance(items, list):
             return []
 
-        tracks = []
+        tracks: list[TrackData] = []
 
         for item in items:
-            if isinstance(item, dict):
-                track = _to_track(item)
+            if not isinstance(item, dict):
+                continue
 
-                if track is not None:
-                    tracks.append(track)
+            track = _to_track(item)
+
+            if track is not None:
+                tracks.append(track)
 
         return tracks
 
@@ -85,30 +87,39 @@ class DeezerClient:
         payload = await self._get_json(f"/chart/{genre_id}/tracks", {"limit": limit})
         return self._parse_tracks(payload)
 
+    async def top_by_query(self, query: str, limit: int = 75) -> list[TrackData]:
+        payload = await self._get_json("/search", {"q": query, "limit": 100})
+        tracks = self._parse_tracks(payload)
+        tracks.sort(key=lambda t: t.rank, reverse=True)
+        return tracks[:limit]
+
     async def genres(self, limit: int = 50) -> list[GenreData]:
         payload = await self._get_json("/genre", {"limit": limit})
         
         if not payload:
             return []
         
-        raw_items = payload.get("data" or [])
+        items = payload.get("data") or []
         
-        if not isinstance(raw_items, list):
+        if not isinstance(items, list):
             return []
        
-        result: list[GenreData] = []
+        genres: list[GenreData] = []
         
-        for item in raw_items:
+        for item in items:
             if not isinstance(item, dict):
                 continue
            
-            if item.get("id") is None or not item.get("name"):
-                continue
+            genre_id = item.get("id")
+            name = item.get("name")
            
-            result.append(GenreData(
-                id=item["id"],
-                name=item["name"],
-                picture_url=item.get("picture_medium"),
+            if genre_id is None or not name:
+                continue
+
+            genres.append(GenreData(
+                id=genre_id,
+                name=name,
+                picture_url=item.get("picture_medium")
             ))
            
-        return result
+        return genres

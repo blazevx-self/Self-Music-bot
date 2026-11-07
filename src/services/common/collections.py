@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from src.core.constants.pagination import PER_PAGE
 
-from src.types.data.collection import CollectionData
+from src.types.data.collections import CollectionData
 from src.types.data.track import TrackData
 
 from src.services.external.deezer import DeezerClient
