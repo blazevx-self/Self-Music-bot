@@ -104,7 +104,7 @@ class TopService:
                 try:
                     if genre_id == self.RUSSIAN_GENRE_ID:
                         # спец-жанр: топ по запросу, отсортированный по прослушиваниям (rank)
-                        tracks = await self.deezer.top_by_query(self.RUSSIAN_QUERY, limit=self.CHART_LIMIT)
+                        tracks = await self.deezer.top_by_query(self.RUSSIAN_QUERY, limit=self.CHART_LIMIT, min_year=2020)
                     else:
                         tracks = await self.deezer.genre_chart_tracks(genre_id, limit=self.CHART_LIMIT)
                 except Exception as e:

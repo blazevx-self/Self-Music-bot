@@ -22,18 +22,23 @@ class CollectionService:
     COLLECTION_TTL = timedelta(hours=1)
     COLLECTION_LIMIT = 100  # /search отдаёт максимум 100 → 10 страниц по 10
 
-    # id, название, поисковый запрос — запросы меняются freely, структура не трогается
+    # RU-подборки первые: мировой чарт глобальный, русского там почти нет.
+    # min_year — фильтр по году выпуска альбома (rank — всевременной, потому
+    # без фильтра в топе всплывает старьё).
     COLLECTIONS: tuple[CollectionData, ...] = (
-        CollectionData(1, "🚗 В дорогу", "музыка в дороге"),
-        CollectionData(2, "🎉 Вечеринка", "party music 2026"),
-        CollectionData(3, "😢 Грустная", "грустные песни"),
-        CollectionData(4, "⚡ Заряд энергии", "энергичная музыка"),
-        CollectionData(5, "🎯 Концентрация", "музыка для концентрации"),
-        CollectionData(6, "🌴 Отдых", "chill музыка для отдыха"),
-        CollectionData(7, "💕 Романтика", "романтическая музыка"),
-        CollectionData(8, "😴 Сон", "музыка для сна"),
-        CollectionData(9, "💪 Тренировка", "музыка для тренировки"),
-        CollectionData(10, "😊 Хорошее настроение", "весёлая музыка"),
+        CollectionData(0, "🇷🇺 Русский топ", "русская музыка", min_year=2020),
+        CollectionData(11, "🎤 Русский реп", "русский реп", min_year=2023),
+        CollectionData(12, "👻 Русский phonk", "русский phonk", min_year=2023),
+        CollectionData(1, "🚗 В дорогу", "музыка в дороге", min_year=2024),
+        CollectionData(2, "🎉 Вечеринка", "party music", min_year=2024),
+        CollectionData(3, "😢 Грустная", "грустные песни", min_year=2024),
+        CollectionData(4, "⚡ Заряд энергии", "энергичная музыка", min_year=2024),
+        CollectionData(5, "🎯 Концентрация", "музыка для концентрации", min_year=2024),
+        CollectionData(6, "🌴 Отдых", "chill музыка для отдыха", min_year=2024),
+        CollectionData(7, "💕 Романтика", "романтическая музыка", min_year=2024),
+        CollectionData(8, "😴 Сон", "музыка для сна", min_year=2024),
+        CollectionData(9, "💪 Тренировка", "музыка для тренировки", min_year=2024),
+        CollectionData(10, "😊 Хорошее настроение", "весёлая музыка", min_year=2024),
     )
 
     def __init__(self, deezer: DeezerClient) -> None:
@@ -52,10 +57,10 @@ class CollectionService:
                 return c.name
         return str(coll_id)
 
-    def _query(self, coll_id: int) -> str | None:
+    def _collection(self, coll_id: int) -> CollectionData | None:
         for c in self.COLLECTIONS:
             if c.id == coll_id:
-                return c.query
+                return c
         return None
 
     def collection_loaded(self, coll_id: int) -> bool:
@@ -70,12 +75,14 @@ class CollectionService:
         if self._fresh(coll_id):
             return list(self._cache[coll_id][1])
 
-        query = self._query(coll_id)
+        collection = self._collection(coll_id)
 
         async with self._lock:
-            if not self._fresh(coll_id) and query:
+            if not self._fresh(coll_id) and collection:
                 try:
-                    tracks = await self.deezer.top_by_query(query, limit=self.COLLECTION_LIMIT)
+                    tracks = await self.deezer.top_by_query(
+                        collection.query, limit=self.COLLECTION_LIMIT, min_year=collection.min_year
+                    )
                 except Exception as e:
                     system_logger.error(f"[MIXES] Fetch failed | coll={coll_id} | error={e}")
                     tracks = []

@@ -20,7 +20,14 @@ def _to_track(item: dict) -> TrackData | None:
         return None
 
     artist = (item.get("artist") or {}).get("name") or ""
-    cover = (item.get("album") or {}).get("cover_medium")
+    album = item.get("album") or {}
+    cover = album.get("cover_medium")
+
+    release_date = album.get("release_date") or ""
+    try:
+        release_year = int(release_date[:4]) if release_date else 0
+    except ValueError:
+        release_year = 0
 
     return TrackData(
         source_id=item["id"],
@@ -30,6 +37,7 @@ def _to_track(item: dict) -> TrackData | None:
         preview_url=preview,
         cover_url=cover,
         rank=item.get("rank") or 0,
+        release_year=release_year,
     )
 
 
@@ -106,14 +114,20 @@ class DeezerClient:
         payload = await self._get_json(f"/chart/{genre_id}/tracks", {"limit": limit})
         return self._parse_tracks(payload)
 
-    async def top_by_query(self, query: str, limit: int = 70) -> list[TrackData]:
+    async def top_by_query(self, query: str, limit: int = 70, min_year: int = 0) -> list[TrackData]:
         """
         «Топ по запросу»: /search + сортировка по rank (прослушивания) по убыванию.
-        Используется для спец-жанра «Русский топ» — мировой чарт глобальный и RU-там почти нет.
+        min_year > 0 — отфильтровать по году выпуска альбома (свежак вместо старья);
+        если после фильтра пусто — вернуть без фильтра.
+        Используется для спец-жанра «Русский топ» и для подборок.
         """
         payload = await self._get_json("/search", {"q": query, "limit": 100})
         tracks = self._parse_tracks(payload)
         tracks.sort(key=lambda t: t.rank, reverse=True)
+        if min_year:
+            fresh = [t for t in tracks if t.release_year >= min_year]
+            if fresh:
+                tracks = fresh
         return tracks[:limit]
 
     async def genres(self, limit: int = 50) -> list[GenreData]:
