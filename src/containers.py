@@ -17,6 +17,7 @@ from src.services import (
     TrackFileCache,
     TopService,
     CollectionService,
+    SettingsService,
 )
 from src.services.common.new import NewReleasesService
 
@@ -36,6 +37,7 @@ class Container(containers.DeclarativeContainer):
 
     # services
     start_service = providers.Factory(StartService, user_repo=user_repo)
+    settings_service = providers.Factory(SettingsService, user_repo=user_repo)
     downloader_service = providers.Singleton(DownloaderService)
     search_service = providers.Singleton(SearchService, deezer=deezer_client)
     new_service = providers.Singleton(NewReleasesService, deezer=deezer_client)

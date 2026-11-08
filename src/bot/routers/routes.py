@@ -1,6 +1,7 @@
 from src.bot.routers.common import (
     start, help, search,
-    stub, new, top, collections
+    stub, new, top, collections,
+    settings,
 )
 
 all_routers = (
@@ -10,6 +11,7 @@ all_routers = (
     new.router,
     top.router,
     collections.router,
+    settings.router,
     stub.router,
 )
 
