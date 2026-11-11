@@ -68,19 +68,31 @@ class VkClient:
 
         return data.get("response")
 
-    @staticmethod
-    def _is_group(screen_name: str) -> bool:
-        return screen_name.startswith(("club", "public", "event")) or screen_name.isdigit()
+    async def _resolve(self, screen_name: str) -> tuple[str, int] | None:
+        """
+        Через utils.resolveScreenName узнаём, кто это: ("user"|"group", object_id).
+        Работает для ЛЮБОГО screen_name («gooddaday», «club123», «id123», ник) —
+        не надо угадывать по префиксу. None — не нашли/нет токена/ошибка.
+        """
+        resp = await self._call("utils.resolveScreenName", {"screen_name": screen_name})
+        if isinstance(resp, dict) and resp.get("type") in ("user", "group") and resp.get("object_id"):
+            return resp["type"], int(resp["object_id"])
+        return None
 
     async def resolve_title(self, screen_name: str) -> str | None:
         """Отображаемое имя профиля/сообщества для кнопки. None — не удалось."""
-        if self._is_group(screen_name):
-            resp = await self._call("groups.getById", {"group_id": screen_name.lstrip("club")})
+        resolved = await self._resolve(screen_name)
+        if resolved is None:
+            return None
+
+        kind, object_id = resolved
+        if kind == "group":
+            resp = await self._call("groups.getById", {"group_id": object_id})
             if isinstance(resp, dict):
                 return resp.get("name")
             return None
 
-        resp = await self._call("users.get", {"user_ids": screen_name})
+        resp = await self._call("users.get", {"user_ids": object_id})
         if isinstance(resp, list) and resp:
             item = resp[0]
             name = f"{item.get('first_name', '')} {item.get('last_name', '')}".strip()
@@ -89,13 +101,18 @@ class VkClient:
 
     async def is_closed(self, screen_name: str) -> bool | None:
         """True — приватный/закрытый профиль. None — не удалось определить (нет токена/ошибка API)."""
-        if self._is_group(screen_name):
-            resp = await self._call("groups.getById", {"group_id": screen_name.lstrip("club")})
+        resolved = await self._resolve(screen_name)
+        if resolved is None:
+            return None
+
+        kind, object_id = resolved
+        if kind == "group":
+            resp = await self._call("groups.getById", {"group_id": object_id})
             if isinstance(resp, dict):
                 return bool(resp.get("is_closed")) or "deactivated" in resp
             return None
 
-        resp = await self._call("users.get", {"user_ids": screen_name, "fields": "can_access_closed,is_closed"})
+        resp = await self._call("users.get", {"user_ids": object_id, "fields": "can_access_closed,is_closed"})
         if isinstance(resp, list) and resp:
             item = resp[0]
             return bool(item.get("is_closed")) or not item.get("can_access_closed", True)
@@ -103,15 +120,12 @@ class VkClient:
 
     async def get_audios(self, screen_name: str, limit: int = 50) -> list[TrackData]:
         """Аудиозаписи профиля/сообщества как TrackData (source_id = id аудио VK). Часто [] из-за ограничений VK."""
-        if self._is_group(screen_name):
-            owner_id = -int(screen_name.lstrip("club"))
-        elif screen_name.startswith("id") and screen_name[2:].isdigit():
-            owner_id = int(screen_name[2:])
-        else:
-            resp = await self._call("users.get", {"user_ids": screen_name})
-            if not (isinstance(resp, list) and resp):
-                return []
-            owner_id = resp[0].get("id")
+        resolved = await self._resolve(screen_name)
+        if resolved is None:
+            return []
+
+        kind, object_id = resolved
+        owner_id = -object_id if kind == "group" else object_id  # у сообщества владелец с минусом
 
         resp = await self._call("audio.get", {"owner_id": owner_id, "count": limit})
         items = resp.get("items", []) if isinstance(resp, dict) else []
