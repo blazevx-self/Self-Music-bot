@@ -149,3 +149,32 @@ class VkClient:
                 continue
 
         return [t for t in tracks if t.title and t.artist]
+
+    async def search_audios(self, query: str, limit: int = 50) -> list[TrackData]:
+        """
+        Поиск аудио по запросу через VK API (разрешён для сервисного токена).
+        Возвращает TrackData с source_id = id аудио VK (для ссылки в поиске).
+        Если error 28/15/другое — возвращает [].
+        """
+        resp = await self._call("audio.search", {"q": query, "count": limit})
+        if not isinstance(resp, dict) or "items" not in resp:
+            return []
+
+        items = resp["items"]
+        tracks: list[TrackData] = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            try:
+                tracks.append(TrackData(
+                    source_id=int(item["id"]),
+                    title=str(item.get("title", "")).strip(),
+                    artist=str(item.get("artist", "")).strip(),
+                    duration_sec=int(item.get("duration", 0)),
+                    preview_url=str(item.get("url") or ""),
+                ))
+            except (KeyError, TypeError, ValueError):
+                continue
+
+        return [t for t in tracks if t.title and t.artist]
+

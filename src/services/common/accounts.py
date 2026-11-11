@@ -73,6 +73,11 @@ class AccountService:
                 status, audios = "closed", []
             else:
                 audios = await self.vk.get_audios(account.screen_name)
+                # fallback: если error 28 или пусто — ищем по названию профиля
+                if not audios:
+                    title = await self.vk.resolve_title(account.screen_name)
+                    if title:
+                        audios = await self.vk.search_audios(title)
                 status = "ok" if audios else "empty"
 
         self._audios_cache[account.id] = (now, status, audios)
