@@ -5,8 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependency_injector import providers, containers
 
+from src.configs.settings import settings
+
 from src.database.repositories import (
     UserRepository,
+    AccountRepository,
 )
 
 from src.services import (
@@ -18,8 +21,10 @@ from src.services import (
     TopService,
     CollectionService,
     SettingsService,
+    AccountService,
 )
 from src.services.common.new import NewReleasesService
+from src.services.external.vk import VkClient
 
 session_context: ContextVar[AsyncSession] = ContextVar("session_context")
 
@@ -31,9 +36,11 @@ class Container(containers.DeclarativeContainer):
 
     # repositories
     user_repo = providers.Factory(UserRepository, session=db_session)
+    account_repo = providers.Factory(AccountRepository, session=db_session)
 
     # external clients
     deezer_client = providers.Singleton(DeezerClient)
+    vk_client = providers.Singleton(VkClient, token=settings.VK_TOKEN)
 
     # services
     start_service = providers.Factory(StartService, user_repo=user_repo)
@@ -43,4 +50,5 @@ class Container(containers.DeclarativeContainer):
     new_service = providers.Singleton(NewReleasesService, deezer=deezer_client)
     top_service = providers.Singleton(TopService, deezer=deezer_client)
     collection_service = providers.Singleton(CollectionService, deezer=deezer_client)
+    account_service = providers.Factory(AccountService, account_repo=account_repo, vk=vk_client)
     file_cache = providers.Singleton(TrackFileCache)

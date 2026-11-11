@@ -1,12 +1,13 @@
 from src.bot.routers.common import (
     start, help, search,
     stub, new, top, collections,
-    settings,
+    settings, account,
 )
 
 all_routers = (
     start.router,
     help.router,
+    account.router,
     search.router,
     new.router,
     top.router,

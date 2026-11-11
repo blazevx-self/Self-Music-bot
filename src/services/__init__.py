@@ -5,6 +5,7 @@ from .common.track_cache import TrackFileCache
 from .common.top import TopService
 from .common.collections import CollectionService
 from .common.settings import SettingsService
+from .common.account import AccountService
 from .external.deezer import DeezerClient
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "TopService",
     "CollectionService",
     "SettingsService",
+    "AccountService",
 ]
