@@ -76,7 +76,10 @@ class VkClient:
         """
         resp = await self._call("utils.resolveScreenName", {"screen_name": screen_name})
         if isinstance(resp, dict) and resp.get("type") in ("user", "group") and resp.get("object_id"):
-            return resp["type"], int(resp["object_id"])
+            try:
+                return resp["type"], int(resp["object_id"])
+            except (TypeError, ValueError):
+                return None
         return None
 
     async def resolve_title(self, screen_name: str) -> str | None:
