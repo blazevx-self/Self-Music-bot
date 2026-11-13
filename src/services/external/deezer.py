@@ -66,6 +66,9 @@ class DeezerClient:
                         return None
 
                     return await response.json()
+        except TimeoutError:
+            system_logger.warning(f"[DEEZER] Request timed out | path={path}")
+            return None
         except (aiohttp.ClientError, ValueError) as e:
             system_logger.warning(f"[DEEZER] Request failed | path={path} | error={e}")
             return None
