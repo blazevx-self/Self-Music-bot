@@ -14,12 +14,15 @@ def _to_track(item: dict) -> TrackData | None:
     Работает и для /search, и для /chart/0/tracks — форма объекта одинаковая
     (id, title, duration, preview, artist.name, album.cover_medium).
     """
+    # Preview не обязателен: воспроизведение бот получает через yt-dlp,
+    # а Deezer нужен для метаданных. Не отбрасываем треки без 30-секундного превью.
     preview = item.get("preview") or ""
 
-    if not preview:
+    artist = (item.get("artist") or {}).get("name") or ""
+    title = item.get("title") or ""
+    if not artist or not title:
         return None
 
-    artist = (item.get("artist") or {}).get("name") or ""
     album = item.get("album") or {}
     cover = album.get("cover_medium")
 
@@ -31,7 +34,7 @@ def _to_track(item: dict) -> TrackData | None:
 
     return TrackData(
         source_id=item["id"],
-        title=item.get("title") or "",
+        title=title,
         artist=artist,
         duration_sec=item.get("duration") or 0,
         preview_url=preview,
