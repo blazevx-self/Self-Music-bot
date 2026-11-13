@@ -7,7 +7,7 @@ from .common.settings import SettingsService
 from .common.accounts import AccountService
 from .common.downloader import DownloaderService
 from .common.track_cache import TrackFileCache
-from .external import DeezerClient, VkClient
+from .external import AudDClient, DeezerClient, VkClient
 
 __all__ = [
     'StartService',
@@ -19,6 +19,7 @@ __all__ = [
     'AccountService',
     'DownloaderService',
     'TrackFileCache',
+    'AudDClient',
     'DeezerClient',
     'VkClient',
 ]

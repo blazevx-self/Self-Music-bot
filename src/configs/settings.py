@@ -13,9 +13,11 @@ class Settings(BaseSettings):
     # если YouTube/SoundCloud недоступны напрямую с сервера (блокировка/DNS)
     YTDLP_PROXY: str | None = Field(default=None)
 
-    # Опционально: токен VK API (standalone-приложение) для раздела «Аккаунты»
-    # (имя профиля, проверка приватности, список аудиозаписей). Без него — алерт «недоступны»
+    # Опционально: токен VK API для раздела «Аккаунты».
     VK_TOKEN: str | None = Field(default=None)
+
+    # Опционально: API-токен AudD для распознавания музыки и напева.
+    AUDD_API_TOKEN: SecretStr | None = Field(default=None)
 
     model_config = SettingsConfigDict(
         env_file=".env",

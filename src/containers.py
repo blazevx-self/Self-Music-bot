@@ -22,6 +22,7 @@ from src.services import (
     AccountService,
     DownloaderService,
     TrackFileCache,
+    AudDClient,
     DeezerClient,
     VkClient,
 )
@@ -39,6 +40,10 @@ class Container(containers.DeclarativeContainer):
     account_repo = providers.Factory(AccountRepository, session=db_session)
 
     # external clients
+    audd_client = providers.Singleton(
+        AudDClient,
+        token=settings.AUDD_API_TOKEN.get_secret_value() if settings.AUDD_API_TOKEN else None,
+    )
     deezer_client = providers.Singleton(DeezerClient)
     vk_client = providers.Singleton(VkClient, token=settings.VK_TOKEN)  # без токена «Аудиозаписи» = алерт «недоступны»
 

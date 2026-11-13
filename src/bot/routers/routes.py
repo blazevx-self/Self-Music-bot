@@ -1,4 +1,4 @@
-from src.bot.routers.common import start, help, accounts, search, new, top, collections, settings, stub
+from src.bot.routers.common import start, help, accounts, recognition, search, new, top, collections, settings, stub
 
 all_routers = (
     start.router,
@@ -6,6 +6,7 @@ all_routers = (
     # «Аккаунты» — ДО search: его message-хендлер имеет фильтр состояния waiting_link,
     # поэтому при ЛЮБОМ другом состоянии текст проваливается дальше в поиск
     accounts.router,     # «Аккаунты»: menu:accounts, acc:*, accaud:*, vka:*, vkap:*
+    recognition.router,  # «Распознавание»: голосовые/аудио/видео — до текстового catch-all
     search.router,
     new.router,          # «Новинки»: menu:new, npage:*, new:*
     top.router,          # «Топ»: menu:top, topg:*, tpage:*, top:*
