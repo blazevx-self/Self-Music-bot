@@ -69,8 +69,7 @@ async def send_track(
 
         if callback.message:
             await callback.message.reply(
-                "Этот поиск устарел. Напиши название песни заново "
-                "<tg-emoji emoji-id=\"5875220935409144484\">🎵</tg-emoji>"
+                "Этот поиск устарел. Напиши название песни заново 🎵"
             )
 
         return

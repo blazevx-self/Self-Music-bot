@@ -14,16 +14,30 @@ def _to_track(item: dict) -> TrackData | None:
         return None
 
     artist = (item.get("artist") or {}).get("name") or ""
-    cover = (item.get("album") or {}).get("cover_medium")
+    title = item.get("title") or ""
+
+    if not artist or not title:
+        return None
+
+    album = item.get("album") or {}
+    cover = album.get("cover_medium")
+
+    release_date = album.get("release_date") or ""
+
+    try:
+        release_year = int(release_date[:4]) if release_date else 0
+    except ValueError:
+        release_year = 0
 
     return TrackData(
         source_id=item["id"],
-        title=item.get("title") or "",
+        title=title,
         artist=artist,
         duration_sec=item.get("duration") or 0,
         preview_url=preview,
         cover_url=cover,
-        rank=item.get("rank") or 0
+        rank=item.get("rank") or 0,
+        release_year=release_year
     )
 
 class DeezerClient:
@@ -42,8 +56,13 @@ class DeezerClient:
                         )
                         return None
                     return await resp.json()
+        except TimeoutError:
+            system_logger.warning(f"[DEEZER] Request timed out | path={path}")
+            return None
         except (aiohttp.ClientError, ValueError) as e:
-            system_logger.warning(f"[DEEZER] Request failed | path={path} | error={e}")
+            system_logger.warning(
+                f"[DEEZER] Request failed | path={path} | error={e}"
+            )
             return None
 
     @staticmethod
@@ -76,7 +95,6 @@ class DeezerClient:
             return []
 
         payload = await self._get_json("/search", {"q": query, "limit": limit})
-
         return self._parse_tracks(payload)
 
     async def world_chart_tracks(self, limit: int = 70) -> list[TrackData]:
@@ -87,10 +105,17 @@ class DeezerClient:
         payload = await self._get_json(f"/chart/{genre_id}/tracks", {"limit": limit})
         return self._parse_tracks(payload)
 
-    async def top_by_query(self, query: str, limit: int = 75) -> list[TrackData]:
+    async def top_by_query(self, query: str, limit: int = 75, min_year: int = 0) -> list[TrackData]:
         payload = await self._get_json("/search", {"q": query, "limit": 100})
         tracks = self._parse_tracks(payload)
         tracks.sort(key=lambda t: t.rank, reverse=True)
+
+        if min_year:
+            fresh = [t for t in tracks if t.release_year >= min_year]
+
+            if fresh:
+                tracks = fresh
+
         return tracks[:limit]
 
     async def genres(self, limit: int = 50) -> list[GenreData]:

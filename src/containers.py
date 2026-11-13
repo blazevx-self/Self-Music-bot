@@ -22,6 +22,7 @@ from src.services import (
     CollectionService,
     SettingsService,
     AccountService,
+    AudDClient,
 )
 from src.services.common.new import NewReleasesService
 from src.services.external.vk import VkClient
@@ -41,6 +42,10 @@ class Container(containers.DeclarativeContainer):
     # external clients
     deezer_client = providers.Singleton(DeezerClient)
     vk_client = providers.Singleton(VkClient, token=settings.VK_TOKEN)
+    audd_client = providers.Singleton(
+        AudDClient,
+        token=settings.AUDD_API_TOKEN.get_secret_value() if settings.AUDD_API_TOKEN else None,
+    )
 
     # services
     start_service = providers.Factory(StartService, user_repo=user_repo)

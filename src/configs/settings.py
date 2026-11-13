@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     # (имя профиля, проверка приватности, список аудиозаписей). Без него — алерт «недоступны»
     VK_TOKEN: str | None = Field(default=None)
 
+    # Опционально: API-токен AudD для распознавания музыки и напева.
+    AUDD_API_TOKEN: SecretStr | None = Field(default=None)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

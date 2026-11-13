@@ -9,3 +9,4 @@ class TrackData:
     preview_url: str
     cover_url: str | None = None
     rank: int = 0
+    release_year: int = 0

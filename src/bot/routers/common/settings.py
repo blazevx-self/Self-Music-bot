@@ -6,7 +6,7 @@ from dependency_injector.wiring import Provide, inject
 from src.containers import Container
 from src.configs.yaml_loader import cfg
 
-from src.types.data.user import UserData   # у тебя types в src/types/data
+from src.types.data.user import UserData
 
 from src.services.common.settings import SettingsService
 from src.bot.keyboards.common.settings import settings_keyboard

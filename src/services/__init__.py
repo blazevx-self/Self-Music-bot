@@ -7,6 +7,7 @@ from .common.collections import CollectionService
 from .common.settings import SettingsService
 from .common.account import AccountService
 from .external.deezer import DeezerClient
+from .external.audd import AudDClient
 
 __all__ = [
     'StartService',
@@ -18,4 +19,5 @@ __all__ = [
     "CollectionService",
     "SettingsService",
     "AccountService",
+    "AudDClient",
 ]
