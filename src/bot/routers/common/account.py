@@ -4,7 +4,8 @@ from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
+from aiogram.filters import Command
 
 from dependency_injector.wiring import Provide, inject
 
@@ -32,14 +33,36 @@ class AddAccount(StatesGroup):
 def _texts() -> dict:
     return cfg["message"]["accounts"]
 
-async def _edit_accounts(callback: CallbackQuery, user: UserData, account_service: AccountService) -> None:
+async def _edit_accounts(
+    callback: CallbackQuery,
+    user: UserData,
+    account_service: AccountService,
+) -> None:
+    if not callback.message:
+        return
+
+    title, keyboard = await _accounts_view(user, account_service)
+    await callback.message.edit_text(title, reply_markup=keyboard)
+
+async def _accounts_view(
+    user: UserData,
+    account_service: AccountService
+) -> tuple[str, InlineKeyboardMarkup]:
     texts = _texts()
-
     accounts = await account_service.list_accounts(user)
-    title = texts["title"] + (f"\n\n{texts['empty']}" if not accounts else "")
 
-    if callback.message:
-        await callback.message.edit_text(title, reply_markup=accounts_keyboard(accounts))
+    title = texts["title"] + (f"\n\n{texts["empty"]}" if not accounts else "")
+    return title, accounts_keyboard(accounts)
+
+@router.message(Command("accounts"))
+@inject
+async def accounts_cmd(
+    message: Message,
+    user: UserData,
+    account_service: AccountService = Provide[Container.account_service]
+):
+    title, keyboard = await _accounts_view(user, account_service)
+    await message.answer(title, reply_markup=keyboard)
 
 @router.callback_query(F.data == "menu:accounts")
 @inject
@@ -78,7 +101,7 @@ async def cancel_add(
     await callback.answer()
     await _edit_accounts(callback, user, account_service)
 
-@router.message(AddAccount.waiting_link, F.text)
+@router.message(AddAccount.waiting_link, F.text, ~F.text.startswith("/"))
 @inject
 async def handle_link(
     message: Message,

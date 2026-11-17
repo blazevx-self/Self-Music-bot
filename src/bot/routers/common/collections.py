@@ -3,7 +3,8 @@ from contextlib import suppress
 
 from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
+from aiogram.filters import Command
 
 from dependency_injector.wiring import Provide, inject
 
@@ -31,25 +32,38 @@ def _mixes_markup(chunk, page: int, total: int, coll_id: int):
         back_callback="menu:mixes", back_text=texts["buttons"]["back"],
     )
 
+def _collections_view(
+        collection_service: CollectionService
+) -> tuple[str, InlineKeyboardMarkup]:
+    texts = cfg["message"]["mixes"]
+    keyboard = collections_keyboard(
+        collection_service.get_collections(),
+        back_callback="menu:back"
+    )
+    return texts["title"], keyboard
+
+@router.message(Command("mixes"))
+@inject
+async def mixes_cmd(
+    message: Message,
+    collection_service: CollectionService = Provide[Container.collection_service]
+):
+    text, keyboard = _collections_view(collection_service)
+    await message.answer(text, reply_markup=keyboard)
+
 @router.callback_query(F.data == "menu:mixes")
 @inject
 async def open_mixes(
     callback: CallbackQuery,
     collection_service: CollectionService = Provide[Container.collection_service]
 ):
-    texts = cfg["message"]["mixes"]
-
     await callback.answer()
 
     if not callback.message:
         return
 
-    await callback.message.edit_text(
-        texts["title"],
-        reply_markup=collections_keyboard(
-            collection_service.get_collections(), back_callback="menu:back"
-        )
-    )
+    text, keyboard = _collections_view(collection_service)
+    await callback.message.edit_text(text, reply_markup=keyboard)
 
 @router.callback_query(F.data.startswith("mixg:"))
 @inject

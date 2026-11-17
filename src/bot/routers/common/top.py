@@ -3,7 +3,8 @@ from contextlib import suppress
 
 from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
+from aiogram.filters import Command
 
 from dependency_injector.wiring import Provide, inject
 
@@ -23,6 +24,30 @@ from src.bot.utils import send_track_to_chat
 
 router = Router()
 
+async def _top_view(top_service: TopService) -> tuple[str, InlineKeyboardMarkup]:
+    texts = cfg["message"]["top"]
+    genres = await top_service.get_genres()
+
+    if not genres:
+        return (
+            texts["empty"],
+            genres_keyboard([], back_callback="menu:back")
+        )
+
+    return (
+        texts["genres_title"],
+        genres_keyboard(genres, back_callback="menu:back")
+    )
+
+@router.message(Command("top"))
+@inject
+async def top_cmd(
+    message: Message,
+    top_service: TopService = Provide[Container.top_service]
+):
+    text, keyboard = await _top_view(top_service)
+    await message.answer(text, reply_markup=keyboard)
+
 @router.callback_query(F.data == "menu:top")
 @inject
 async def open_top(callback: CallbackQuery, top_service: TopService = Provide[Container.top_service]):
@@ -36,19 +61,8 @@ async def open_top(callback: CallbackQuery, top_service: TopService = Provide[Co
     if not callback.message:
         return
 
-    genres = await top_service.get_genres()
-
-    if not genres:
-        await callback.message.edit_text(
-            texts["empty"],
-            reply_markup=genres_keyboard([], back_callback="menu:back"),
-        )
-        return
-
-    await callback.message.edit_text(
-        texts["genres_title"],
-        reply_markup=genres_keyboard(genres, back_callback="menu:back"),
-    )
+    text, keyboard = await _top_view(top_service)
+    await callback.message.edit_text(text, reply_markup=keyboard)
 
 @router.callback_query(F.data.startswith("topg:"))
 @inject

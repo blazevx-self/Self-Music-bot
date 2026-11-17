@@ -2,7 +2,8 @@ from contextlib import suppress
 
 from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
+from aiogram.filters import Command
 
 from dependency_injector.wiring import Provide, inject
 
@@ -31,6 +32,35 @@ def _new_markup(chunk, page: int, total: int):
         back_text=texts["buttons"]["back"],
     )
 
+async def _new_view(new_service: NewReleasesService) -> tuple[str, InlineKeyboardMarkup]:
+    texts = cfg["message"]["new"]
+    tracks = await new_service.get_tracks()
+
+    if not tracks:
+        return texts["empty"], _new_markup([], page=0, total=0)
+
+    chunk, total = new_service.page(page=0, per_page=PER_PAGE)
+    return texts["title"], _new_markup(chunk, page=0, total=total)
+
+@router.message(Command("new"))
+@inject
+async def new_cmd(
+    message: Message,
+    new_service: NewReleasesService = Provide[Container.new_service]
+):
+    texts = cfg["message"]["new"]
+    status = None
+
+    if not new_service.is_loaded:
+        status = await message.answer(texts["updating"])
+
+    text, keyboard = await _new_view(new_service)
+
+    if status:
+        await status.edit_text(text, reply_markup=keyboard)
+    else:
+        await message.answer(text, reply_markup=keyboard)
+
 @router.callback_query(F.data == "menu:new")
 @inject
 async def open_new(
@@ -47,21 +77,8 @@ async def open_new(
     if not callback.message:
         return
 
-    tracks = await new_service.get_tracks()
-
-    if not tracks:
-        await callback.message.edit_text(
-            texts["empty"],
-            reply_markup=_new_markup([], page=0, total=0),
-        )
-        return
-
-    chunk, total = new_service.page(page=0, per_page=PER_PAGE)
-
-    await callback.message.edit_text(
-        texts["title"],
-        reply_markup=_new_markup(chunk, page=0, total=total),
-    )
+    text, keyboard = await _new_view(new_service)
+    await callback.message.edit_text(text, reply_markup=keyboard)
 
 @router.callback_query(F.data == "npage:noop")
 async def new_page_noop(callback: CallbackQuery):
