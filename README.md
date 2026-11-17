@@ -2,96 +2,151 @@
 
 # 🎧 Self Music
 
-**Персональный музыкальный ассистент: подбор по вкусу, поиск треков и плейлисты.**
+**Музыкальный Telegram-ассистент: ищет треки, распознаёт мелодии и помогает находить музыку по настроению.**
 
-[![Python](https://img.shields.io/badge/Python-3.13+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![aiogram](https://img.shields.io/badge/aiogram-3.x-2AABEE?logo=telegram&logoColor=white)](https://docs.aiogram.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[Бот в Telegram](https://t.me/selfmusical_bot) · [Разработчик](https://t.me/blazevx) · [Канал проекта](https://t.me/blazevx_self)
+[Открыть бота](https://t.me/selfmusical_bot) · [Разработчик](https://t.me/blazevx) · [Канал проекта](https://t.me/blazevx_self)
 
 </div>
 
 ---
 
-## ℹ️ О проекте (в процессе разработки, сделана малая часть)
+## ✨ О проекте
 
-**Self Music** — Telegram-бот, ориентированный на прямой поиск и доставку полных аудиозаписей в чат без сторонней рекламы и перехода на внешние сервисы.
+**Self Music** — персональный музыкальный бот для Telegram. Он помогает найти песню по названию или исполнителю, распознать музыку из аудио и видео, а также открыть чарты и тематические подборки.
 
-Большинство открытых API (например, Deezer) отдают только 30-секундные ознакомительные фрагменты. В проекте реализован гибридный подход:
-1. Каталог **Deezer API** используется для быстрого поиска, получения точных названий, длительности и обложек альбомов.
-2. При выборе композиции загрузчик на базе **yt-dlp** находит полную версию (SoundCloud / YouTube) и передаёт файл в Telegram в неблокирующем потоке.
+Проект находится в активной разработке. Данные о треках и обложках бот получает через Deezer, а для попытки найти аудиозапись использует `yt-dlp` и доступные источники. Доступность конкретного трека зависит от источника и региона.
 
----
+### Как это работает
 
-## 📲 Функционал
+```text
+Текстовый запрос ──► Deezer: поиск и метаданные ──► результаты в Telegram
+Выбор трека ───────► yt-dlp: поиск аудио ─────────► отправка аудио в чат
+Голос / аудио / видео ► AudD: распознавание ───────► поиск совпадения в Deezer
+```
 
-- **Каталог и поиск:** поиск по названию композиции и имени исполнителя по международной базе.
-- **Полные аудиозаписи:** отправка полноценных аудиофайлов в формате Telegram Audio (`.m4a` / `.mp3`).
-- **Метаданные:** корректное заполнение тегов (исполнитель, трек, длительность) и прикрепление оригинальной обложки.
-- **Постраничная навигация:** отображение результатов порциями по 10 треков с инлайн-пагинацией.
-- **Отказоустойчивость:** fallback-логика источников для предотвращения блокировок (HTTP 403) на стороне серверных дата-центров.
-- **Защита от нагрузки:**
-  - Дебаунс нажатий инлайн-кнопок для предотвращения повторных скачиваний (`CallbackSpamMiddleware`).
-  - Ограничение частоты текстовых запросов со скользящим окном и временной блокировкой (`MessageFloodMiddleware`).
-- **Контроль доступа:** проверка обязательной подписки на канал проекта перед началом работы.
+## 🎼 Возможности
 
----
+- **Поиск музыки** по названию трека или имени исполнителя с постраничной навигацией.
+- **Отправка найденного аудио** в чат как Telegram Audio — если подходящая запись доступна в источниках.
+- **Распознавание музыки** из голосовых сообщений, аудиофайлов и видео; для напетых мелодий используется режим AudD humming.
+- **Новинки и топы Deezer** — мировые новинки, жанровые чарты и отдельный русский топ.
+- **Подборки по настроению** — например, музыка для дороги, отдыха или тренировки.
+- **Настройки функций** — пользователь может включать и отключать распознавание и другие доступные переключатели.
+- **Раздел аккаунтов** — экспериментальная работа с публичными профилями VK. Доступ к аудиозаписям зависит от ограничений VK API и настроек профиля.
+- **Проверка подписки на канал** перед началом использования.
+- **Защита от частых запросов и повторных нажатий** на кнопки.
 
-## 📝 Планы по развитию
+> Возможности внешних сервисов меняются. Бот не гарантирует наличие каждой записи или доступность VK-аудио.
 
-- [ ] Кэширование `file_id` отправленных аудиозаписей в PostgreSQL для моментальной повторной отправки.
-- [ ] Пользовательские плейлисты и избранное (`/playlists`).
-- [ ] Распознавание аудиозаписей по голосовым сообщениям и видео-кружкам.
-- [ ] Парсинг ссылок на альбомы и плейлисты стриминговых сервисов.
-- [ ] Топы, новинки и подборки
-- [ ] Настройка функционала и аккаунты
- 
----
+## 🤖 Команды и меню
 
-## 📜 Развёртывание
+- `/start` — начать работу и открыть главное меню.
+- `/help` — показать справку.
+
+Поиск, новинки, топы, подборки, настройки и аккаунты открываются из меню бота. В текущей версии это разделы меню, а не отдельные slash-команды.
+
+## 🧰 Технологии
+
+- Python 3.14 и [aiogram 3](https://docs.aiogram.dev/)
+- PostgreSQL 16, SQLAlchemy и Alembic
+- Docker Compose
+- Deezer API, AudD API и `yt-dlp`
+- FFmpeg для извлечения аудио из видео
+
+## 🚀 Запуск через Docker Compose
 
 ### Требования
-- Установленные `docker` и `docker compose`.
-- Токен Telegram-бота от [@BotFather](https://t.me/BotFather).
 
-### 💾 Установка
+- Docker с поддержкой `docker compose`.
+- Telegram-бот и его токен от [@BotFather](https://t.me/BotFather).
+- ID Telegram-пользователя администратора.
+- Канал проекта, если включена проверка подписки.
 
-1. Склонируйте репозиторий:
-   ```bash
-   git clone https://github.com/your-username/self-music.git
-   cd self-music
+### 1. Получить проект
 
-2. Создайте конфигурационный файл окружения:
-   ```bash
-    cp .env.example .env
+```bash
+git clone https://github.com/blazevx-self/Self-Music-bot.git
+cd Self-Music-bot
+cp .env.example .env
+```
 
-3. Заполните обязательные переменные в .env:
-    ```ini
-   POSTGRES_USER=your_postgres_user
-   POSTGRES_PASSWORD=your_postgres_password
-   POSTGRES_DB=self_music
+В Windows можно скопировать `.env.example` в `.env` вручную, если команда `cp` недоступна.
 
-   PGADMIN_EMAIL=admin@example.com
-   PGADMIN_PASSWORD=your_pgadmin_password
+### 2. Настроить `.env`
 
-   BOT_TOKEN=your_bot_token
-   ADMIN_ID=your_telegram_id
+Укажи значения вместо примеров:
 
-   DATABASE_URL="postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+```dotenv
+POSTGRES_USER=self_music
+POSTGRES_PASSWORD=замени-на-сильный-пароль
+POSTGRES_DB=self_music
+POSTGRES_CONTAINER_NAME=self-music-postgres
 
-   CHANNEL_ID=your_telegram_channel_id
-   CHANNEL_URL=https://t.me/your_channel
+PGADMIN_EMAIL=admin@example.com
+PGADMIN_PASSWORD=замени-на-сильный-пароль
+PGADMIN_CONTAINER_NAME=self-music-pgadmin
 
-4. Запустите контейнеры:
-   ```bash
-   docker compose up -d --build
+BOT_CONTAINER_NAME=self-music-bot
+BOT_TOKEN=токен-от-BotFather
+ADMIN_ID=твой-числовой-Telegram-ID
 
-5. Просмотр логов:
-   ```bash 
-   docker compose logs -f bot
+DATABASE_URL=postgresql+asyncpg://self_music:замени-на-сильный-пароль@postgres:5432/self_music
 
-## 📄 Лицензия
-Проект распространяется под лицензией MIT.
+CHANNEL_ID=-1000000000000
+CHANNEL_URL=https://t.me/имя_канала
+
+# Необязательно: распознавание AudD
+AUDD_API_TOKEN=
+
+# Необязательно: доступ к VK API для раздела аккаунтов
+VK_TOKEN=
+
+# Необязательно: прокси для yt-dlp, если источник недоступен напрямую
+YTDLP_PROXY=
+```
+
+`CHANNEL_ID` — числовой ID канала, обычно начинается с `-100`. Боту нужно дать доступ к каналу, чтобы проверка подписки работала.
+
+Если в пароле PostgreSQL есть символы вроде `@`, `:`, `/` или `#`, закодируй их для URL в `DATABASE_URL` либо используй пароль без этих символов.
+
+**Не публикуй `.env` и не отправляй его в GitHub:** в нём находятся секреты. Файл уже исключён из Git через `.gitignore`.
+
+### 3. Запустить
+
+```bash
+docker compose up -d --build
+docker compose ps
+docker compose logs -f bot
+```
+
+Контейнер миграций дождётся готовности PostgreSQL и выполнит миграции Alembic при запуске Compose.
+
+### 4. Остановить
+
+```bash
+docker compose down
+```
+
+Обычный `down` останавливает и удаляет контейнеры, но сохраняет данные PostgreSQL в Docker volume. **Не добавляй `-v`, если не хочешь удалить базу данных.**
+
+## 🖥️ PgAdmin
+
+PgAdmin доступен локально по адресу [http://localhost:5050](http://localhost:5050). Войди с `PGADMIN_EMAIL` и `PGADMIN_PASSWORD` из `.env`.
+
+Чтобы подключиться к базе из PgAdmin, укажи hostname `postgres`, порт `5432`, имя базы, пользователя и пароль из `.env`. Этот hostname работает внутри Docker-сети проекта.
+
+## 🔑 Необязательные интеграции
+
+- **AudD:** получи API-токен в [кабинете AudD](https://dashboard.audd.io/) и задай `AUDD_API_TOKEN`. Без него обычный текстовый поиск продолжит работать, но распознавание будет недоступно.
+- **VK:** задай `VK_TOKEN`, чтобы бот мог обращаться к VK API. Даже с токеном VK может ограничивать доступ к аудиозаписям.
+- **Прокси для yt-dlp:** при необходимости укажи `YTDLP_PROXY`, например `socks5h://proxy-host:1080`.
+
+## 🛡️ Ответственное использование
+
+Внешние каталоги и платформы предоставляют данные по собственным правилам и могут менять доступность контента. Используй бота только для материалов, к которым у тебя есть право доступа, и соблюдай условия соответствующих сервисов и местное законодательство.
