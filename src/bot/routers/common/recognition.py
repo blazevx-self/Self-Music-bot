@@ -19,7 +19,7 @@ from src.services.common.search import SearchService
 from src.services.common.settings import SettingsService
 from src.services.external.audd import AudDClient
 
-from src.bot.keyboards.common.search import PER_PAGE, search_keyboard
+from src.bot.keyboards.search import PER_PAGE, search_keyboard
 from src.utils.logger import system_logger
 
 router = Router()

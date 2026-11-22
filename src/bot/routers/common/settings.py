@@ -10,7 +10,7 @@ from src.configs.yaml_loader import cfg
 from src.types.data.user import UserData
 
 from src.services.common.settings import SettingsService
-from src.bot.keyboards.common.settings import settings_keyboard
+from src.bot.keyboards.settings import settings_keyboard
 
 router = Router()
 

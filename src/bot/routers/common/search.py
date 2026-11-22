@@ -11,13 +11,14 @@ from dependency_injector.wiring import Provide, inject
 from src.containers import Container
 from src.configs.yaml_loader import cfg
 
+from src.core.constants.pagination import PER_PAGE
 from src.types.data.user import UserData
 
 from src.services.common.search import SearchService
 from src.services.common.downloader import DownloaderService
 from src.services.common.track_cache import TrackFileCache
 
-from src.bot.keyboards.common.search import PER_PAGE, search_keyboard
+from src.bot.keyboards.search import search_keyboard
 from src.bot.utils import parse_callback_id, send_track_to_chat
 
 router = Router()

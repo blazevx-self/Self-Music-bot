@@ -17,8 +17,8 @@ from src.services.common.top import TopService
 from src.services.common.downloader import DownloaderService
 from src.services.common.track_cache import TrackFileCache
 
-from src.bot.keyboards.common.tracks import tracks_keyboard
-from src.bot.keyboards.common.top import genres_keyboard
+from src.bot.keyboards.tracks import tracks_keyboard
+from src.bot.keyboards.top import genres_keyboard
 
 from src.bot.utils import send_track_to_chat
 

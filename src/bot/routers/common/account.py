@@ -20,8 +20,8 @@ from src.services.common.downloader import DownloaderService
 from src.services.common.track_cache import TrackFileCache
 from src.services.external.deezer import DeezerClient
 
-from src.bot.keyboards.common.account import accounts_keyboard, cancel_keyboard, profile_keyboard
-from src.bot.keyboards.common.tracks import tracks_keyboard
+from src.bot.keyboards.account import accounts_keyboard, cancel_keyboard, profile_keyboard
+from src.bot.keyboards.tracks import tracks_keyboard
 
 from src.bot.utils import send_track_to_chat, parse_callback_id
 

@@ -11,7 +11,7 @@ from src.core.enums.status import ResultStatus
 from src.types.data.user import UserData
 
 from src.services.common.start import StartService
-from src.bot.keyboards.common.start import subscribe_keyboard, menu_keyboard
+from src.bot.keyboards.start import subscribe_keyboard, menu_keyboard
 
 router = Router()
 

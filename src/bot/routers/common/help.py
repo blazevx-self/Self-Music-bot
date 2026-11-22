@@ -4,7 +4,7 @@ from aiogram.filters import Command
 
 from src.configs.yaml_loader import cfg
 
-from src.bot.keyboards.common.start import back_keyboard
+from src.bot.keyboards.start import back_keyboard
 
 router = Router()
 
